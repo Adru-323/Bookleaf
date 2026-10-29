@@ -13,29 +13,21 @@ const BookRoute = require("./routes/bookRouter.js");
 const ticketRoute = require("./routes/ticketRouter.js");
 const socketAuthMiddleware = require("./middleware/socketAuthMiddleware.js");
 
-const localOrigins = ["http://localhost:5173", "http://127.0.0.1:5173"];
-const configuredOrigins = (process.env.FRONTEND_URL || "")
-  .split(",")
-  .map((origin) => origin.trim().replace(/\/$/, ""))
-  .filter(Boolean);
-const allowedOrigins = process.env.NODE_ENV === "production"
-  ? configuredOrigins
-  : [...new Set([...configuredOrigins, ...localOrigins])];
-const checkOrigin = (origin, callback) => {
-  if (!origin || allowedOrigins.includes(origin.replace(/\/$/, ""))) {
-    return callback(null, true);
-  }
-  return callback(new Error("Origin is not allowed by CORS"));
-};
+const frontendURL = process.env.FRONTEND_URL;
 
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+  frontendURL,
+].filter(Boolean);
 
 const app = express();
 const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: checkOrigin,
-    credentials: true,
+  origin: allowedOrigins,
+  credentials: true,
   },
 });
 io.use(socketAuthMiddleware);
@@ -48,8 +40,8 @@ app.use(cookieParser());
 
 app.use(
   cors({
-    origin: checkOrigin,
-    credentials: true,
+  origin: allowedOrigins,
+  credentials: true,
   })
 );
 
@@ -70,15 +62,6 @@ const url = process.env.MONGODB_URI;
 
 const start = async () => {
   try {
-    if (!process.env.MONGODB_URI) {
-      throw new Error("MONGODB_URI must be configured");
-    }
-    if (!process.env.SECRET_CODE) {
-      throw new Error("SECRET_CODE must be configured");
-    }
-    if (process.env.NODE_ENV === "production" && allowedOrigins.length === 0) {
-      throw new Error("FRONTEND_URL must be configured in production");
-    }
     await mongoose.connect(url);
     console.log("DB is connected");
 
@@ -88,8 +71,7 @@ const start = async () => {
       console.log(`Listening on port ${PORT}`);
     });
   } catch (error) {
-    console.error("Server startup failed:", error.message);
-    process.exitCode = 1;
+    console.log("message", error.message);
   }
 };
 
