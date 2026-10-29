@@ -16,6 +16,7 @@ const socketAuthMiddleware = require("./middleware/socketAuthMiddleware.js");
 const frontendURL = process.env.FRONTEND_URL;
 
 const allowedOrigins = [
+  "https://bookleaf-1-nell.onrender.com",
   "http://localhost:5173",
   "http://127.0.0.1:5173",
   frontendURL,
